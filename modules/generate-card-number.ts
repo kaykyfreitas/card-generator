@@ -1,43 +1,45 @@
-import { Application, Router } from "https://deno.land/x/oak/mod.ts";
-//http
-const app = new Application();
-const router = new Router();
+interface CardDto {
+  number: string,
+  cvv: string,
+  expires: string,
+  flag: string,
+  owner: string
+}
 
-router.get('/credit-card/generate/:flag/:finalDigit', (ctx) => {
-  const { flag, finalDigit } = ctx.params;
-  ctx.response.body = {
-    number: generate(flag, finalDigit),
+export function generate(flag: string, finalDigit: number): CardDto {
+  let cardNumber;
+  do {
+    cardNumber = generateCreditCard(flag.toLowerCase());
+  } while(cardNumber[cardNumber.length - 1] != finalDigit);
+
+  return {
+    number: cardNumber,
     cvv: '123',
     expires: '12/28',
     flag: flag[0].toUpperCase()+flag.slice(1).toLowerCase(),
     owner: 'John Doe'
-  }
-});
+  } 
+}
 
-app.use(router.routes());
-app.use(router.allowedMethods())
-app.listen({ port: 3000 }, () => console.log("Running on port"));
-
-// app
 let pseudoRandom = Math.random;
 
-const amexPrefixList = ['34', '37'];
-const enRoutePrefixList = ['2014', '2149'];
-const mastercardPrefixList = ['51', '52', '53', '54', '55'];
-const dinersPrefixList = ['300', '301', '302', '303', '36', '38'];
-const visaPrefixList = ['4539','4556','4916','4532','4929','40240071','4485','4716','4'];
-const jcbPrefixList = new Array('35');
-const voyagerPrefixList = new Array('8699');
-const discoverPrefixList = new Array('6011');
+const amexPrefixList: string[] = ['34', '37'];
+const enRoutePrefixList: string[] = ['2014', '2149'];
+const mastercardPrefixList: string[] = ['51', '52', '53', '54', '55'];
+const dinersPrefixList: string[] = ['300', '301', '302', '303', '36', '38'];
+const visaPrefixList: string[] = ['4539','4556','4916','4532','4929','40240071','4485','4716','4'];
+const jcbPrefixList: string[] = new Array('35');
+const voyagerPrefixList: string[] = new Array('8699');
+const discoverPrefixList: string[] = new Array('6011');
 
-function strrev(str) {
+function strrev(str: string): string {
   if (!str) return '';
   let revstr = '';
   for (let i = str.length - 1; i >= 0; i--) revstr += str.charAt(i);
   return revstr;
 }
 
-function completed_number(prefix, length) {
+function completed_number(prefix: string, length: number): string {
   while (prefix.length < length - 1) prefix += Math.floor(pseudoRandom() * 10);
   const reversedCCnumberString = strrev(prefix);
   const reversedCCnumber: any = [];
@@ -55,7 +57,7 @@ function completed_number(prefix, length) {
   return prefix + ((Math.floor(sum / 10) + 1) * 10 - sum) % 10; //ccnumber + checkDigit
 }
 
-function cardNumber(prefixList, length) {
+function cardNumber(prefixList: string[], length: number): string {
   return completed_number(prefixList[Math.floor(pseudoRandom() * prefixList.length)], length);
 }
 
@@ -70,7 +72,7 @@ const schemes = {
   voyager: { prefixList: voyagerPrefixList, digitCount: 16 },
 };
 
-function generateCreditCard(cardScheme) {
+function generateCreditCard(cardScheme: string): string {
   pseudoRandom = pseudoRandom;
   switch (cardScheme) {
     case 'visa': return cardNumber(schemes['visa'].prefixList, schemes['visa'].digitCount);
@@ -83,12 +85,4 @@ function generateCreditCard(cardScheme) {
     case 'voyager': return cardNumber(schemes['voyager'].prefixList, schemes['voyager'].digitCount);
     default: return cardNumber(schemes['master'].prefixList, schemes['master'].digitCount);
   }
-}
-
-const generate = (flag, finalDigit) => {
-  let cardNumber;
-  do {
-    cardNumber = generateCreditCard(flag.toLowerCase());
-  } while(cardNumber[cardNumber.length - 1] != finalDigit);
-  return cardNumber;
 }
