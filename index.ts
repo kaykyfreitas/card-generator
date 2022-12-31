@@ -7,7 +7,7 @@ router.get('/credit-card/generate/:flag/:finalDigit', (ctx) => {
   const { flag, finalDigit } = ctx.params;
   ctx.response.body = {
     number: generate(flag, finalDigit),
-    cvv: 123,
+    cvv: '123',
     expires: '12/28',
     flag: flag[0].toUpperCase()+flag.slice(1).toLowerCase(),
     owner: 'John Doe'
